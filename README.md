@@ -1,6 +1,6 @@
 # Montenegro
 
-Aplicativo em React Native + Expo baseado no layout do Figma **Montenegro — Entre Capas e Telas**.
+Aplicativo em **React Native + Expo + TypeScript** baseado no Figma **Montenegro — Entre Capas e Telas**, com navegação e layout pensado para smartphone.
 
 ## Rodando o projeto
 
@@ -11,13 +11,33 @@ npx expo start
 
 Depois abra com o Expo Go no celular ou execute em um emulador Android/iOS.
 
-## Estrutura inicial
+## Telas implementadas
 
-- Home responsiva inspirada no Figma
-- Destaques em carrossel horizontal para smartphone
-- Navegação com React Navigation
-- Tela de login inicial
-- Tema com as cores do projeto
-- Fontes Cinzel e Poppins
+- Home / apresentação
+- Login
+- Cadastro
+- Explorar
+- Catálogo de livros
+- Catálogo de filmes
+- Catálogo de séries
+- Detalhes da obra
+- Avaliação rápida
+- Avaliação detalhada
+- Minhas estantes
+- Perfil
+- Editar perfil
+- Cadastro de obras
 
-> Os assets atuais são carregados a partir dos links temporários exportados pelo Figma. O próximo passo é substituir esses links por arquivos locais permanentes e implementar as demais telas do design.
+## Estrutura
+
+- `src/components`: componentes reutilizáveis
+- `src/data`: dados demonstrativos do catálogo
+- `src/navigation`: tipos e rotas
+- `src/screens`: telas do aplicativo
+- `src/theme`: identidade visual do Figma
+
+## Funcionalidade atual
+
+A navegação, formulários, seletores de nota e fluxos entre as telas funcionam localmente. O projeto ainda **não possui backend ou banco de dados**, então login, avaliações, perfil e cadastro de obras ainda não são persistidos após fechar o aplicativo.
+
+> Algumas imagens vieram diretamente dos assets temporários do Figma. Para produção, substitua-as por arquivos locais ou por URLs permanentes.
