@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Montenegro",
+    "slug": "montenegro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#01003A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true },
+    "android": { "adaptiveIcon": { "backgroundColor": "#01003A" } },
+    "web": { "bundler": "metro" }
+  }
+}
