@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS works (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_works_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT uq_work_title_kind UNIQUE (title, kind),
   INDEX idx_works_kind (kind),
   INDEX idx_works_title (title)
 );
