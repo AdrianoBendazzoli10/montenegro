@@ -1,50 +1,83 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
+
+const popcorn = 'https://www.figma.com/api/mcp/asset/fb81cede-49e2-44ef-ab35-5c287b83600a.png';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.back}><Text style={styles.backText}>‹</Text></Pressable>
-        <Text style={styles.brand}>MONTENEGRO</Text>
-        <Text style={styles.title}>ENTRAR</Text>
-        <Text style={styles.subtitle}>Acesse sua conta para continuar explorando histórias brasileiras.</Text>
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={styles.formSection}>
+            <Text style={styles.title}>Faça seu login</Text>
 
-        <View style={styles.form}>
-          <TextInput value={email} onChangeText={setEmail} placeholder="E-mail" placeholderTextColor="rgba(237,231,219,0.55)" keyboardType="email-address" autoCapitalize="none" style={styles.input} />
-          <TextInput value={password} onChangeText={setPassword} placeholder="Senha" placeholderTextColor="rgba(237,231,219,0.55)" secureTextEntry style={styles.input} />
-          <Pressable onPress={() => navigation.replace('Explore')} style={({ pressed }) => [styles.button, pressed && { opacity: 0.75 }]}>
-            <Text style={styles.buttonText}>Entrar</Text>
-          </Pressable>
-        </View>
+            <Text style={styles.label}>♙  Email</Text>
+            <TextInput placeholder="Seu email" placeholderTextColor="#747474" keyboardType="email-address" autoCapitalize="none" style={styles.input} />
 
-        <Pressable onPress={() => navigation.navigate('Register')}><Text style={styles.helper}>Ainda não tem conta? <Text style={styles.link}>Cadastre-se</Text></Text></Pressable>
-      </View>
+            <Text style={styles.label}>⁕⁕⁕  Senha</Text>
+            <TextInput placeholder="Sua senha" placeholderTextColor="#747474" secureTextEntry style={styles.input} />
+
+            <View style={styles.rememberRow}>
+              <View style={styles.checkbox} />
+              <Text style={styles.rememberText}>Lembrar senha</Text>
+            </View>
+
+            <Pressable style={styles.forgotWrap}>
+              <Text style={styles.forgot}>Esqueceu a senha?</Text>
+            </Pressable>
+
+            <Pressable style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}>
+              <Text style={styles.googleG}>G</Text>
+              <Text style={styles.googleText}>Entrar com o Google</Text>
+            </Pressable>
+
+            <Pressable onPress={() => navigation.replace('Explore')} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
+              <Text style={styles.primaryText}>Entrar</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.accountPanel}>
+            <Text style={styles.panelTitle}>Ainda não tem{`\n`}uma conta?</Text>
+            <Text style={styles.panelCopy}>Crie uma conta e faça{`\n`}suas avaliações!</Text>
+            <Pressable onPress={() => navigation.navigate('Register')} style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}>
+              <Text style={styles.outlineText}>Criar conta</Text>
+            </Pressable>
+            <Image source={{ uri: popcorn }} style={styles.popcorn} resizeMode="contain" />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.navy },
-  container: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, width: '100%', maxWidth: 620, alignSelf: 'center' },
-  back: { position: 'absolute', top: 16, left: 22, width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: 'rgba(237,231,219,.3)', alignItems: 'center', justifyContent: 'center' },
-  backText: { color: colors.cream, fontSize: 34, lineHeight: 36, marginTop: -4 },
-  brand: { color: colors.cream, fontFamily: 'Cinzel_700Bold', fontSize: 24, textAlign: 'center' },
-  title: { color: colors.cream, fontFamily: 'Cinzel_700Bold', fontSize: 38, textAlign: 'center', marginTop: 10 },
-  subtitle: { color: 'rgba(237,231,219,0.8)', fontFamily: 'Poppins_400Regular', fontSize: 15, lineHeight: 23, textAlign: 'center', marginTop: 14 },
-  form: { gap: 14, marginTop: 34 },
-  input: { borderWidth: 1, borderColor: 'rgba(237,231,219,0.4)', borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: colors.cream, fontFamily: 'Poppins_400Regular' },
-  button: { backgroundColor: colors.green, borderRadius: 999, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
-  buttonText: { color: colors.white, fontFamily: 'Poppins_600SemiBold', fontSize: 17 },
-  helper: { color: 'rgba(237,231,219,0.68)', fontFamily: 'Poppins_400Regular', fontSize: 12, textAlign: 'center', marginTop: 18 },
-  link: { color: colors.yellow, fontFamily: 'Poppins_600SemiBold' },
+  flex: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#E8E7E2' },
+  content: { flexGrow: 1, paddingBottom: 24 },
+  formSection: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 30, width: '100%', maxWidth: 480, alignSelf: 'center' },
+  title: { color: colors.green, fontFamily: 'Poppins_600SemiBold', fontSize: 34, lineHeight: 42, marginBottom: 28 },
+  label: { color: '#151515', fontFamily: 'Poppins_400Regular', fontSize: 17, marginBottom: 8, marginTop: 8 },
+  input: { height: 52, borderWidth: 1, borderColor: '#001A38', borderRadius: 9, paddingHorizontal: 14, fontFamily: 'Poppins_400Regular', fontSize: 14, color: '#001A38', backgroundColor: 'transparent' },
+  rememberRow: { flexDirection: 'row', alignItems: 'center', marginTop: 20 },
+  checkbox: { width: 20, height: 20, borderWidth: 1, borderColor: '#001A38', borderRadius: 4, marginRight: 9 },
+  rememberText: { color: '#2A2A2A', fontFamily: 'Poppins_400Regular', fontSize: 13 },
+  forgotWrap: { alignSelf: 'center', marginTop: 24, paddingBottom: 3, borderBottomWidth: 1, borderBottomColor: colors.green },
+  forgot: { color: '#001A38', fontFamily: 'Poppins_400Regular', fontSize: 13 },
+  googleButton: { alignSelf: 'center', minWidth: 235, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#EFEFEF', borderRadius: 8, marginTop: 40, gap: 12 },
+  googleG: { fontFamily: 'Poppins_600SemiBold', color: '#4285F4', fontSize: 17 },
+  googleText: { color: '#333', fontFamily: 'Poppins_400Regular', fontSize: 13 },
+  primaryButton: { height: 48, backgroundColor: colors.green, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 42 },
+  primaryText: { color: '#E8E7E2', fontFamily: 'Poppins_600SemiBold', fontSize: 15 },
+  accountPanel: { width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: colors.green, borderTopLeftRadius: 54, borderBottomLeftRadius: 54, paddingHorizontal: 36, paddingTop: 36, paddingBottom: 22, minHeight: 385 },
+  panelTitle: { color: '#EBEBEB', fontFamily: 'Poppins_600SemiBold', fontSize: 32, lineHeight: 39 },
+  panelCopy: { color: '#EBEBEB', fontFamily: 'Poppins_400Regular', fontSize: 17, lineHeight: 23, marginTop: 24 },
+  outlineButton: { height: 46, borderWidth: 1, borderColor: '#EBEBEB', borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 30 },
+  outlineText: { color: '#EBEBEB', fontFamily: 'Poppins_400Regular', fontSize: 15 },
+  popcorn: { alignSelf: 'center', width: 170, height: 150, marginTop: 18 },
+  pressed: { opacity: .72 },
 });
