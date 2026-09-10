@@ -1,5 +1,6 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
 type ScreenShellProps = PropsWithChildren<{
@@ -34,7 +35,7 @@ export function ScreenShell({ title, subtitle, onBack, right, scroll = true, chi
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       {scroll ? (
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {body}
