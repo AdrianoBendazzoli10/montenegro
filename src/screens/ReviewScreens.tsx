@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/types';
 import { getMediaById } from '../data/media';
 import { colors } from '../theme/colors';
+import { api, resolveBackendWorkId } from '../services/api';
 
 type QuickProps = NativeStackScreenProps<RootStackParamList, 'QuickReview'>;
 type DetailedProps = NativeStackScreenProps<RootStackParamList, 'DetailedReview'>;
@@ -36,8 +37,32 @@ export function QuickReviewScreen({ navigation, route }: QuickProps) {
   const [rating, setRating] = useState(0);
   const [worthIt, setWorthIt] = useState<string | null>(null);
   const [comment, setComment] = useState('');
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
   const noun = item.kind === 'livro' ? 'livro' : item.kind === 'filme' ? 'filme' : 'série';
   const action = item.kind === 'livro' ? 'ler' : 'assistir';
+
+  async function publish() {
+    if (!rating || !worthIt) {
+      setStatus('Escolha uma nota e responda se valeu a pena.');
+      return;
+    }
+    const workId = resolveBackendWorkId(item.id);
+    if (!Number.isFinite(workId)) {
+      setStatus('Essa obra ainda está apenas no catálogo demonstrativo. Cadastre-a no banco primeiro.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setStatus('');
+      await api.saveReview(workId, { mode: 'rapida', rating, worth_it: worthIt, comment });
+      navigation.navigate('Details', { id: item.id });
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : 'Não foi possível publicar a avaliação.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -61,7 +86,8 @@ export function QuickReviewScreen({ navigation, route }: QuickProps) {
 
         <Text style={styles.commentHeading}>Escreva um comentário:</Text>
         <TextInput value={comment} onChangeText={setComment} multiline placeholder="Digite aqui..." placeholderTextColor="#596170" style={styles.commentBox} />
-        <Pressable onPress={() => navigation.navigate('Details', { id: item.id })} style={styles.publishButton}><Text style={styles.publishText}>Publicar avaliação</Text></Pressable>
+        {status ? <Text style={styles.status}>{status}</Text> : null}
+        <Pressable disabled={loading} onPress={publish} style={({ pressed }) => [styles.publishButton, (pressed || loading) && styles.pressed]}><Text style={styles.publishText}>{loading ? 'Publicando...' : 'Publicar avaliação'}</Text></Pressable>
         <View style={styles.footer}><Text style={styles.footerBrand}>MONTENEGRO</Text></View>
       </ScrollView>
     </SafeAreaView>
@@ -74,9 +100,33 @@ export function DetailedReviewScreen({ navigation, route }: DetailedProps) {
   const [worthIt, setWorthIt] = useState<string | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
   const noun = item.kind === 'livro' ? 'livro' : item.kind === 'filme' ? 'filme' : 'série';
   const action = item.kind === 'livro' ? 'ler' : 'assistir';
   const labels = item.kind === 'livro' ? ['Enredo', 'Personagens', 'Fluidez da leitura', 'Ambientação', 'Originalidade'] : item.kind === 'filme' ? ['Roteiro', 'Atuação', 'Trilha sonora', 'Fotografia', 'Originalidade'] : ['Roteiro', 'Elenco', 'Ritmo', 'Fotografia', 'Originalidade'];
+
+  async function publish() {
+    if (!rating || !worthIt) {
+      setStatus('Escolha a nota e responda se valeu a pena.');
+      return;
+    }
+    const workId = resolveBackendWorkId(item.id);
+    if (!Number.isFinite(workId)) {
+      setStatus('Essa obra ainda está apenas no catálogo demonstrativo. Cadastre-a no banco primeiro.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setStatus('');
+      await api.saveReview(workId, { mode: 'detalhada', rating, worth_it: worthIt, comment, scores });
+      navigation.navigate('Details', { id: item.id });
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : 'Não foi possível publicar a avaliação.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -107,7 +157,8 @@ export function DetailedReviewScreen({ navigation, route }: DetailedProps) {
 
         <Text style={styles.commentHeading}>Escreva um comentário:</Text>
         <TextInput value={comment} onChangeText={setComment} multiline placeholder="Digite aqui..." placeholderTextColor="#596170" style={styles.commentBox} />
-        <Pressable onPress={() => navigation.navigate('Details', { id: item.id })} style={styles.publishButton}><Text style={styles.publishText}>Publicar avaliação  →</Text></Pressable>
+        {status ? <Text style={styles.status}>{status}</Text> : null}
+        <Pressable disabled={loading} onPress={publish} style={({ pressed }) => [styles.publishButton, (pressed || loading) && styles.pressed]}><Text style={styles.publishText}>{loading ? 'Publicando...' : 'Publicar avaliação  →'}</Text></Pressable>
         <View style={styles.footer}><Text style={styles.footerBrand}>MONTENEGRO</Text></View>
       </ScrollView>
     </SafeAreaView>
@@ -138,6 +189,7 @@ const styles = StyleSheet.create({
   worthText: { color: '#001A38', fontFamily: 'Poppins_400Regular', fontSize: 15 },
   commentHeading: { color: colors.purple, fontFamily: 'Poppins_600SemiBold', fontSize: 21, textAlign: 'center', marginTop: 42, marginBottom: 16 },
   commentBox: { marginHorizontal: 20, minHeight: 180, borderWidth: 1, borderColor: '#001A38', borderRadius: 12, padding: 16, textAlignVertical: 'top', color: '#001A38', fontFamily: 'Poppins_400Regular', fontSize: 13 },
+  status: { color: '#B00020', fontFamily: 'Poppins_400Regular', fontSize: 12, textAlign: 'center', marginHorizontal: 20, marginTop: 14 },
   publishButton: { alignSelf: 'center', minWidth: 210, borderWidth: 1.5, borderColor: colors.purple, borderRadius: 999, paddingHorizontal: 24, paddingVertical: 9, marginTop: 28, marginBottom: 50 },
   publishText: { color: colors.purple, fontFamily: 'Poppins_600SemiBold', fontSize: 13, textAlign: 'center' },
   steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 30, paddingHorizontal: 50 },
@@ -158,4 +210,5 @@ const styles = StyleSheet.create({
   scoreTextActive: { color: '#fff' },
   footer: { backgroundColor: colors.purple, paddingVertical: 34 },
   footerBrand: { color: '#FFDD56', fontFamily: 'Cinzel_700Bold', fontSize: 24, textAlign: 'center' },
+  pressed: { opacity: .65 },
 });
