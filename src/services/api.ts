@@ -11,23 +11,47 @@ export function getAuthToken() {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      ...(options.headers || {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...(options.headers || {}),
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(data?.message || 'Erro ao conectar com o servidor.');
+    const text = await response.text();
+    let data: any = null;
+
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { message: text || 'Resposta inválida do servidor.' };
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.message || `Erro ${response.status} ao conectar com o servidor.`);
+    }
+
+    return data as T;
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error(`O servidor não respondeu. Verifique se o backend está rodando e se o celular consegue acessar ${API_URL}/health.`);
+    }
+
+    if (error instanceof TypeError || String(error?.message || '').includes('Network request failed')) {
+      throw new Error(`Não foi possível conectar ao backend em ${API_URL}. Confira o IP do PC, o Wi-Fi e o Firewall do Windows.`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return data as T;
 }
 
 export const api = {
