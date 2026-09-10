@@ -1,14 +1,42 @@
+import { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
+import { api, setAuthToken } from '../services/api';
 
 const tickets = 'https://www.figma.com/api/mcp/asset/73231595-3eec-4311-9129-0088e6b375ed.png';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'admin' | 'avaliador'>('avaliador');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleRegister() {
+    setError('');
+    if (!name.trim() || !email.trim() || !password) {
+      setError('Preencha nome, e-mail e senha.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api.register({ name, email, password, role });
+      setAuthToken(response.token);
+      navigation.replace('Explore');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível criar sua conta.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -26,17 +54,21 @@ export function RegisterScreen({ navigation }: Props) {
             <Text style={styles.title}>Crie sua conta</Text>
 
             <Text style={styles.label}>♙  Nome completo</Text>
-            <TextInput placeholder="Seu nome completo" placeholderTextColor="#747474" style={styles.input} />
+            <TextInput value={name} onChangeText={setName} placeholder="Seu nome completo" placeholderTextColor="#747474" style={styles.input} />
 
             <Text style={styles.label}>♙  Email</Text>
-            <TextInput placeholder="Seu email" placeholderTextColor="#747474" keyboardType="email-address" autoCapitalize="none" style={styles.input} />
+            <TextInput value={email} onChangeText={setEmail} placeholder="Seu email" placeholderTextColor="#747474" keyboardType="email-address" autoCapitalize="none" style={styles.input} />
 
             <Text style={styles.label}>⁕⁕⁕  Senha</Text>
-            <TextInput placeholder="Sua senha" placeholderTextColor="#747474" secureTextEntry style={styles.input} />
+            <TextInput value={password} onChangeText={setPassword} placeholder="Sua senha" placeholderTextColor="#747474" secureTextEntry style={styles.input} />
 
             <View style={styles.roleRow}>
-              <Pressable style={styles.roleOutline}><Text style={styles.roleOutlineText}>Administrador</Text></Pressable>
-              <Pressable style={styles.roleFilled}><Text style={styles.roleFilledText}>Avaliador</Text></Pressable>
+              <Pressable onPress={() => setRole('admin')} style={role === 'admin' ? styles.roleFilled : styles.roleOutline}>
+                <Text style={role === 'admin' ? styles.roleFilledText : styles.roleOutlineText}>Administrador</Text>
+              </Pressable>
+              <Pressable onPress={() => setRole('avaliador')} style={role === 'avaliador' ? styles.roleFilled : styles.roleOutline}>
+                <Text style={role === 'avaliador' ? styles.roleFilledText : styles.roleOutlineText}>Avaliador</Text>
+              </Pressable>
             </View>
 
             <Pressable style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}>
@@ -44,8 +76,10 @@ export function RegisterScreen({ navigation }: Props) {
               <Text style={styles.googleText}>Entrar com o Google</Text>
             </Pressable>
 
-            <Pressable onPress={() => navigation.replace('Explore')} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
-              <Text style={styles.primaryText}>Criar conta</Text>
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <Pressable disabled={loading} onPress={handleRegister} style={({ pressed }) => [styles.primaryButton, (pressed || loading) && styles.pressed]}>
+              <Text style={styles.primaryText}>{loading ? 'Criando conta...' : 'Criar conta'}</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -76,7 +110,8 @@ const styles = StyleSheet.create({
   googleButton: { alignSelf: 'center', minWidth: 235, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#EFEFEF', borderRadius: 8, marginTop: 30, gap: 12 },
   googleG: { fontFamily: 'Poppins_600SemiBold', color: '#4285F4', fontSize: 17 },
   googleText: { color: '#333', fontFamily: 'Poppins_400Regular', fontSize: 13 },
-  primaryButton: { height: 48, backgroundColor: colors.purple, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 28 },
+  error: { color: '#B00020', fontFamily: 'Poppins_400Regular', fontSize: 12, textAlign: 'center', marginTop: 18 },
+  primaryButton: { height: 48, backgroundColor: colors.purple, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
   primaryText: { color: '#fff', fontFamily: 'Poppins_600SemiBold', fontSize: 15 },
   pressed: { opacity: .72 },
 });
