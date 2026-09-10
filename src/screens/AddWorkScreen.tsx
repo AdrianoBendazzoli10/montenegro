@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { MediaKind, RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
+import { api } from '../services/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddWork'>;
 
@@ -17,9 +18,43 @@ export function AddWorkScreen({ navigation }: Props) {
   const [publisher, setPublisher] = useState('');
   const [genre, setGenre] = useState('');
   const [synopsis, setSynopsis] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const creatorLabel = kind === 'livro' ? 'Autor' : kind === 'filme' ? 'Diretor' : 'Criador';
   const nameLabel = kind === 'livro' ? 'Nome do livro' : kind === 'filme' ? 'Nome do filme' : 'Nome da série';
+
+  async function handleSubmit() {
+    if (!kind) return;
+    setMessage('');
+    if (!title.trim() || !creator.trim()) {
+      setMessage('Preencha o nome da obra e o autor/diretor.');
+      return;
+    }
+
+    const yearMatch = date.match(/\b(19|20)\d{2}\b/);
+    const releaseDate = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+
+    try {
+      setLoading(true);
+      await api.createWork({
+        title,
+        kind,
+        creator,
+        publisher: kind === 'livro' ? publisher : null,
+        release_date: releaseDate,
+        year: yearMatch ? Number(yearMatch[0]) : null,
+        genre,
+        synopsis,
+      });
+      setMessage('Obra cadastrada com sucesso!');
+      setTimeout(() => navigation.navigate('Catalog', { kind }), 500);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Não foi possível cadastrar a obra.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -54,7 +89,7 @@ export function AddWorkScreen({ navigation }: Props) {
             <TextInput value={title} onChangeText={setTitle} placeholder={nameLabel} placeholderTextColor="#747474" style={styles.input} />
 
             <Text style={styles.label}>Data de publicação:</Text>
-            <TextInput value={date} onChangeText={setDate} placeholder="Data de publicação" placeholderTextColor="#747474" style={styles.input} />
+            <TextInput value={date} onChangeText={setDate} placeholder="AAAA ou AAAA-MM-DD" placeholderTextColor="#747474" style={styles.input} />
 
             <Text style={styles.label}>{creatorLabel}:</Text>
             <TextInput value={creator} onChangeText={setCreator} placeholder={creatorLabel} placeholderTextColor="#747474" style={styles.input} />
@@ -67,7 +102,8 @@ export function AddWorkScreen({ navigation }: Props) {
             <Text style={styles.label}>Sinopse:</Text>
             <TextInput value={synopsis} onChangeText={setSynopsis} multiline placeholder="Sinopse..." placeholderTextColor="#747474" style={styles.textarea} />
 
-            <Pressable onPress={() => navigation.navigate('Explore')} style={styles.submitButton}><Text style={styles.submitText}>Cadastrar {typeLabels[kind].toLowerCase()}</Text></Pressable>
+            {message ? <Text style={styles.message}>{message}</Text> : null}
+            <Pressable disabled={loading} onPress={handleSubmit} style={({ pressed }) => [styles.submitButton, (pressed || loading) && styles.pressed]}><Text style={styles.submitText}>{loading ? 'Cadastrando...' : `Cadastrar ${typeLabels[kind].toLowerCase()}`}</Text></Pressable>
           </View>
         )}
 
@@ -101,7 +137,8 @@ const styles = StyleSheet.create({
   label: { color: '#161616', fontFamily: 'Poppins_400Regular', fontSize: 15, marginBottom: 7, marginTop: 15 },
   input: { height: 50, borderWidth: 1, borderColor: '#001A38', borderRadius: 9, paddingHorizontal: 14, color: '#001A38', fontFamily: 'Poppins_400Regular', fontSize: 13 },
   textarea: { minHeight: 165, borderWidth: 1, borderColor: '#001A38', borderRadius: 9, padding: 14, color: '#001A38', fontFamily: 'Poppins_400Regular', fontSize: 13, textAlignVertical: 'top' },
-  submitButton: { alignSelf: 'center', borderWidth: 1.5, borderColor: '#001A38', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 9, marginTop: 28 },
+  message: { color: colors.green, fontFamily: 'Poppins_600SemiBold', fontSize: 12, textAlign: 'center', marginTop: 18 },
+  submitButton: { alignSelf: 'center', borderWidth: 1.5, borderColor: '#001A38', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 9, marginTop: 18 },
   submitText: { color: '#001A38', fontFamily: 'Poppins_600SemiBold', fontSize: 13 },
   footer: { backgroundColor: colors.purple, paddingVertical: 36, paddingHorizontal: 20 },
   footerBrand: { color: '#FFDD56', fontFamily: 'Cinzel_700Bold', fontSize: 23, lineHeight: 30, textAlign: 'center' },
