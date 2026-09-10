@@ -7,6 +7,7 @@ import { pool, testDatabaseConnection } from './db.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3333);
+const HOST = process.env.HOST || '0.0.0.0';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 
 app.use(cors());
@@ -249,11 +250,12 @@ app.delete('/shelves/:id/items/:workId', auth, async (req, res) => {
 
 app.use((req, res) => res.status(404).json({ message: `Rota não encontrada: ${req.method} ${req.path}` }));
 
-app.listen(PORT, async () => {
+app.listen(PORT, HOST, async () => {
   try {
     await testDatabaseConnection();
-    console.log(`Montenegro API rodando em http://localhost:${PORT}`);
+    console.log(`Montenegro API rodando em http://${HOST}:${PORT}`);
     console.log('MySQL conectado com sucesso.');
+    console.log(`No celular, use http://IP_DO_SEU_PC:${PORT}/health`);
   } catch (error) {
     console.error('API iniciou, mas não conseguiu conectar ao MySQL:', error.message);
   }
