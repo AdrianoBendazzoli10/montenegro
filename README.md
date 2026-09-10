@@ -1,43 +1,144 @@
 # Montenegro
 
-Aplicativo em **React Native + Expo + TypeScript** baseado no Figma **Montenegro — Entre Capas e Telas**, com navegação e layout pensado para smartphone.
+Aplicativo em **React Native + Expo + TypeScript**, com backend em **Node.js + Express** e banco **MySQL**, baseado no Figma **Montenegro — Entre Capas e Telas**.
 
-## Rodando o projeto
+## Estrutura
+
+```text
+montenegro/
+├─ App.tsx                 # app mobile
+├─ src/                    # telas, componentes, dados e cliente da API
+└─ backend/
+   ├─ src/server.js        # API REST
+   ├─ src/db.js            # conexão MySQL
+   ├─ sql/schema.sql       # criação do banco/tabelas
+   ├─ sql/seed.sql         # obras iniciais
+   └─ .env.example
+```
+
+## O que o backend já faz
+
+- Cadastro de usuário
+- Login com senha criptografada e JWT
+- Papéis `admin` e `avaliador`
+- Perfil do usuário
+- Cadastro e busca de livros, filmes e séries
+- Avaliação rápida e detalhada
+- Uma avaliação por usuário/obra, com atualização caso avalie novamente
+- Estantes personalizadas
+- Adicionar/remover obras das estantes
+- Média e quantidade de avaliações por obra
+
+## 1. Criar o banco MySQL
+
+Abra o MySQL Workbench, phpMyAdmin ou terminal do MySQL e execute primeiro:
+
+```sql
+backend/sql/schema.sql
+```
+
+Depois execute:
+
+```sql
+backend/sql/seed.sql
+```
+
+Isso cria o banco `montenegro` e adiciona algumas obras iniciais.
+
+## 2. Configurar e iniciar o backend
+
+```bash
+cd backend
+npm install
+```
+
+Copie `backend/.env.example` para `backend/.env` e ajuste seus dados do MySQL:
+
+```env
+PORT=3333
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=SUA_SENHA
+DB_NAME=montenegro
+JWT_SECRET=coloque-uma-chave-grande-aqui
+```
+
+Depois rode:
+
+```bash
+npm run dev
+```
+
+Teste no navegador:
+
+```text
+http://localhost:3333/health
+```
+
+Se estiver certo, deve aparecer `ok: true`.
+
+## 3. Conectar o app à API
+
+Na raiz do projeto, crie um arquivo `.env` usando `.env.example` como base.
+
+### Emulador/web no mesmo PC
+
+```env
+EXPO_PUBLIC_API_URL=http://localhost:3333
+```
+
+### Celular físico com Expo Go
+
+No celular, `localhost` aponta para o próprio celular. Use o **IPv4 do computador** que está rodando o backend.
+
+No Windows:
+
+```bash
+ipconfig
+```
+
+Exemplo, se o IPv4 do PC for `192.168.0.15`:
+
+```env
+EXPO_PUBLIC_API_URL=http://192.168.0.15:3333
+```
+
+O PC e o celular precisam estar na mesma rede Wi-Fi.
+
+## 4. Rodar o aplicativo
+
+Em outro terminal, na raiz:
 
 ```bash
 npm install
 npx expo start
 ```
 
-Depois abra com o Expo Go no celular ou execute em um emulador Android/iOS.
+Abra pelo Expo Go ou emulador.
 
-## Telas implementadas
+## Principais rotas da API
 
-- Home / apresentação
-- Login
-- Cadastro
-- Explorar
-- Catálogo de livros
-- Catálogo de filmes
-- Catálogo de séries
-- Detalhes da obra
-- Avaliação rápida
-- Avaliação detalhada
-- Minhas estantes
-- Perfil
-- Editar perfil
-- Cadastro de obras
+```text
+POST   /auth/register
+POST   /auth/login
+GET    /auth/me
+PUT    /users/me
+GET    /works
+GET    /works/:id
+POST   /works
+POST   /works/:id/reviews
+GET    /reviews/me
+GET    /shelves
+POST   /shelves
+POST   /shelves/:id/items
+DELETE /shelves/:id/items/:workId
+```
 
-## Estrutura
+As rotas de cadastro de obra, avaliação e estantes exigem o token JWT recebido no login/cadastro.
 
-- `src/components`: componentes reutilizáveis
-- `src/data`: dados demonstrativos do catálogo
-- `src/navigation`: tipos e rotas
-- `src/screens`: telas do aplicativo
-- `src/theme`: identidade visual do Figma
+## Observações
 
-## Funcionalidade atual
+O login, cadastro, cadastro de obra e avaliações do aplicativo já estão preparados para conversar com a API. O catálogo visual ainda mantém parte dos dados mockados do Figma para preservar o layout enquanto a integração completa com todas as telas é finalizada.
 
-A navegação, formulários, seletores de nota e fluxos entre as telas funcionam localmente. O projeto ainda **não possui backend ou banco de dados**, então login, avaliações, perfil e cadastro de obras ainda não são persistidos após fechar o aplicativo.
-
-> Algumas imagens vieram diretamente dos assets temporários do Figma. Para produção, substitua-as por arquivos locais ou por URLs permanentes.
+Os assets vindos diretamente do Figma usam URLs temporárias e futuramente devem ser salvos localmente ou hospedados de forma permanente.
