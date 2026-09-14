@@ -10,6 +10,7 @@ export type RootStackParamList = {
   QuickReview: { id: string };
   DetailedReview: { id: string };
   Shelves: undefined;
+  EditShelf: { shelfId: number };
   Profile: undefined;
   EditProfile: undefined;
   AddWork: undefined;
