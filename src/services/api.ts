@@ -1,6 +1,55 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3333';
+const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:3333').replace(/\/$/, '');
 
 let authToken: string | null = null;
+
+export type ApiUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: 'admin' | 'avaliador';
+  avatar_url?: string | null;
+  bio?: string | null;
+};
+
+export type ApiWork = {
+  id: number;
+  title: string;
+  kind: 'livro' | 'filme' | 'serie';
+  creator: string;
+  publisher?: string | null;
+  release_date?: string | null;
+  year?: number | null;
+  genre?: string | null;
+  synopsis?: string | null;
+  image_url?: string | null;
+  rating: number;
+  review_count: number;
+};
+
+export type ApiReview = {
+  id: number;
+  user_id: number;
+  work_id: number;
+  mode: 'rapida' | 'detalhada';
+  rating: number;
+  worth_it: 'sim' | 'mais_ou_menos' | 'nao';
+  comment?: string | null;
+  emotion?: string | null;
+  verdict?: string | null;
+  scores?: Record<string, number> | null;
+  user_name?: string;
+  avatar_url?: string | null;
+  title?: string;
+  kind?: 'livro' | 'filme' | 'serie';
+  image_url?: string | null;
+};
+
+export type ApiShelf = {
+  id: number;
+  user_id: number;
+  name: string;
+  items: ApiWork[];
+};
 
 export function setAuthToken(token: string | null) {
   authToken = token;
@@ -10,9 +59,16 @@ export function getAuthToken() {
   return authToken;
 }
 
+function extractErrorMessage(data: any, fallback: string) {
+  if (typeof data?.message === 'string') return data.message;
+  if (typeof data?.detail === 'string') return data.detail;
+  if (Array.isArray(data?.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+  return fallback;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
     const response = await fetch(`${API_URL}${path}`, {
@@ -27,27 +83,23 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
     const text = await response.text();
     let data: any = null;
-
     try {
       data = text ? JSON.parse(text) : null;
     } catch {
-      data = { message: text || 'Resposta inválida do servidor.' };
+      data = { detail: text || 'Resposta inválida do servidor.' };
     }
 
     if (!response.ok) {
-      throw new Error(data?.message || `Erro ${response.status} ao conectar com o servidor.`);
+      throw new Error(extractErrorMessage(data, `Erro ${response.status} ao conectar com o servidor.`));
     }
-
     return data as T;
   } catch (error: any) {
     if (error?.name === 'AbortError') {
-      throw new Error(`O servidor não respondeu. Verifique se o backend está rodando e se o celular consegue acessar ${API_URL}/health.`);
+      throw new Error(`O servidor não respondeu. Confira ${API_URL}/health e a configuração EXPO_PUBLIC_API_URL.`);
     }
-
     if (error instanceof TypeError || String(error?.message || '').includes('Network request failed')) {
-      throw new Error(`Não foi possível conectar ao backend em ${API_URL}. Confira o IP do PC, o Wi-Fi e o Firewall do Windows.`);
+      throw new Error(`Não foi possível conectar ao backend em ${API_URL}. No celular, use o IPv4 do computador em EXPO_PUBLIC_API_URL e mantenha ambos no mesmo Wi-Fi.`);
     }
-
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -55,55 +107,51 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  health() {
+    return request<{ ok: boolean; service: string; backend: string }>('/health');
+  },
   register(payload: { name: string; email: string; password: string; role: 'admin' | 'avaliador' }) {
-    return request<{ token: string; user: unknown }>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return request<{ token: string; user: ApiUser }>('/auth/register', { method: 'POST', body: JSON.stringify(payload) });
   },
-
   login(payload: { email: string; password: string }) {
-    return request<{ token: string; user: unknown }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return request<{ token: string; user: ApiUser }>('/auth/login', { method: 'POST', body: JSON.stringify(payload) });
   },
-
   me() {
-    return request<{ user: unknown }>('/auth/me');
+    return request<{ user: ApiUser }>('/auth/me');
   },
-
+  updateProfile(payload: { name?: string; bio?: string | null; avatar_url?: string | null }) {
+    return request<{ user: ApiUser }>('/users/me', { method: 'PUT', body: JSON.stringify(payload) });
+  },
   listWorks(kind?: 'livro' | 'filme' | 'serie', search?: string) {
     const params = new URLSearchParams();
     if (kind) params.set('kind', kind);
-    if (search) params.set('search', search);
+    if (search?.trim()) params.set('search', search.trim());
     const suffix = params.toString() ? `?${params.toString()}` : '';
-    return request<{ works: unknown[] }>(`/works${suffix}`);
+    return request<{ works: ApiWork[] }>(`/works${suffix}`);
   },
-
+  getWork(id: string | number) {
+    return request<{ work: ApiWork; reviews: ApiReview[] }>(`/works/${id}`);
+  },
   createWork(payload: Record<string, unknown>) {
-    return request<{ work: unknown }>('/works', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return request<{ work: ApiWork }>('/works', { method: 'POST', body: JSON.stringify(payload) });
   },
-
   saveReview(workId: string | number, payload: Record<string, unknown>) {
-    return request<{ review: unknown }>(`/works/${workId}/reviews`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return request<{ review: ApiReview }>(`/works/${workId}/reviews`, { method: 'POST', body: JSON.stringify(payload) });
   },
-
+  listMyReviews() {
+    return request<{ reviews: ApiReview[] }>('/reviews/me');
+  },
   listShelves() {
-    return request<{ shelves: unknown[] }>('/shelves');
+    return request<{ shelves: ApiShelf[] }>('/shelves');
   },
-
   createShelf(name: string) {
-    return request<{ shelf: unknown }>('/shelves', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    });
+    return request<{ shelf: ApiShelf }>('/shelves', { method: 'POST', body: JSON.stringify({ name }) });
+  },
+  addShelfItem(shelfId: number, workId: number) {
+    return request<{ ok: true }>(`/shelves/${shelfId}/items`, { method: 'POST', body: JSON.stringify({ work_id: workId }) });
+  },
+  removeShelfItem(shelfId: number, workId: number) {
+    return request<void>(`/shelves/${shelfId}/items/${workId}`, { method: 'DELETE' });
   },
 };
 
