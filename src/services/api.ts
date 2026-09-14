@@ -1,4 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:3333').replace(/\/$/, '');
+const AUTH_STORAGE_KEY = '@montenegro:auth-token';
 
 let authToken: string | null = null;
 
@@ -9,6 +12,7 @@ export type ApiUser = {
   role: 'admin' | 'avaliador';
   avatar_url?: string | null;
   bio?: string | null;
+  created_at?: string;
 };
 
 export type ApiWork = {
@@ -53,6 +57,17 @@ export type ApiShelf = {
 
 export function setAuthToken(token: string | null) {
   authToken = token;
+  if (token) {
+    void AsyncStorage.setItem(AUTH_STORAGE_KEY, token);
+  } else {
+    void AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+}
+
+export async function restoreAuthToken() {
+  const token = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+  authToken = token;
+  return token;
 }
 
 export function getAuthToken() {
@@ -90,6 +105,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
 
     if (!response.ok) {
+      if (response.status === 401) setAuthToken(null);
       throw new Error(extractErrorMessage(data, `Erro ${response.status} ao conectar com o servidor.`));
     }
     return data as T;
