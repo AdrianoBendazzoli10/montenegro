@@ -163,6 +163,9 @@ export const api = {
   createShelf(name: string) {
     return request<{ shelf: ApiShelf }>('/shelves', { method: 'POST', body: JSON.stringify({ name }) });
   },
+  renameShelf(shelfId: number, name: string) {
+    return request<{ shelf: Pick<ApiShelf, 'id' | 'user_id' | 'name'> }>(`/shelves/${shelfId}`, { method: 'PUT', body: JSON.stringify({ name }) });
+  },
   addShelfItem(shelfId: number, workId: number) {
     return request<{ ok: true }>(`/shelves/${shelfId}/items`, { method: 'POST', body: JSON.stringify({ work_id: workId }) });
   },
