@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { Cinzel_700Bold, useFonts as useCinzelFonts } from '@expo-google-fonts/cinzel';
 import { Poppins_400Regular, Poppins_600SemiBold, useFonts as usePoppinsFonts } from '@expo-google-fonts/poppins';
-import { Roboto_300Light, Roboto_400Regular, Roboto_600SemiBold, useFonts as useRobotoFonts } from '@expo-google-fonts/roboto';
+import { Roboto_300Light, Roboto_400Regular, Roboto_500Medium, useFonts as useRobotoFonts } from '@expo-google-fonts/roboto';
 import { View } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
@@ -23,7 +23,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   const [cinzelLoaded] = useCinzelFonts({ Cinzel_700Bold });
   const [poppinsLoaded] = usePoppinsFonts({ Poppins_400Regular, Poppins_600SemiBold });
-  const [robotoLoaded] = useRobotoFonts({ Roboto_300Light, Roboto_400Regular, Roboto_600SemiBold });
+  const [robotoLoaded] = useRobotoFonts({ Roboto_300Light, Roboto_400Regular, Roboto_500Medium });
 
   if (!cinzelLoaded || !poppinsLoaded || !robotoLoaded) {
     return <View style={{ flex: 1, backgroundColor: colors.navy }} />;
