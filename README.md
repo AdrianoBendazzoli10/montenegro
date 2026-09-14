@@ -1,144 +1,187 @@
 # Montenegro
 
-Aplicativo em **React Native + Expo + TypeScript**, com backend em **Node.js + Express** e banco **MySQL**, baseado no Figma **Montenegro — Entre Capas e Telas**.
+Aplicativo em **React Native + Expo + TypeScript**, com backend em **Python + FastAPI** e banco **MySQL**, implementado a partir do Figma **Montenegro — Entre Capas e Telas**.
+
+## Stack
+
+- React Native + Expo 54 + TypeScript
+- React Navigation
+- Poppins, Cinzel e Roboto
+- FastAPI
+- SQLAlchemy 2
+- MySQL + PyMySQL
+- JWT
+- AsyncStorage para persistir a sessão
 
 ## Estrutura
 
 ```text
 montenegro/
-├─ App.tsx                 # app mobile
-├─ src/                    # telas, componentes, dados e cliente da API
+├─ App.tsx
+├─ src/
+│  ├─ components/         # header, footer e componentes compartilhados
+│  ├─ screens/            # telas do aplicativo
+│  ├─ services/api.ts     # cliente da API + sessão JWT
+│  ├─ navigation/
+│  └─ theme/
 └─ backend/
-   ├─ src/server.js        # API REST
-   ├─ src/db.js            # conexão MySQL
-   ├─ sql/schema.sql       # criação do banco/tabelas
-   ├─ sql/seed.sql         # obras iniciais
+   ├─ app/
+   │  ├─ main.py          # API FastAPI
+   │  ├─ database.py      # conexão MySQL
+   │  ├─ models.py        # modelos SQLAlchemy
+   │  ├─ schemas.py       # schemas Pydantic
+   │  └─ security.py      # JWT + senha
+   ├─ sql/schema.sql
+   ├─ sql/seed.sql
+   ├─ requirements.txt
    └─ .env.example
 ```
 
-## O que o backend já faz
-
-- Cadastro de usuário
-- Login com senha criptografada e JWT
-- Papéis `admin` e `avaliador`
-- Perfil do usuário
-- Cadastro e busca de livros, filmes e séries
-- Avaliação rápida e detalhada
-- Uma avaliação por usuário/obra, com atualização caso avalie novamente
-- Estantes personalizadas
-- Adicionar/remover obras das estantes
-- Média e quantidade de avaliações por obra
-
 ## 1. Criar o banco MySQL
 
-Abra o MySQL Workbench, phpMyAdmin ou terminal do MySQL e execute primeiro:
+No MySQL Workbench, phpMyAdmin ou terminal, execute:
 
 ```sql
 backend/sql/schema.sql
 ```
 
-Depois execute:
+Depois, para carregar as obras iniciais:
 
 ```sql
 backend/sql/seed.sql
 ```
 
-Isso cria o banco `montenegro` e adiciona algumas obras iniciais.
+O banco utilizado é `montenegro`.
 
-## 2. Configurar e iniciar o backend
+## 2. Configurar o backend FastAPI
+
+No Windows:
 
 ```bash
 cd backend
-npm install
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
 ```
 
-Copie `backend/.env.example` para `backend/.env` e ajuste seus dados do MySQL:
+Edite `backend/.env`:
 
 ```env
+HOST=0.0.0.0
 PORT=3333
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=SUA_SENHA
 DB_NAME=montenegro
-JWT_SECRET=coloque-uma-chave-grande-aqui
+JWT_SECRET=troque-por-uma-chave-grande-e-segura
+JWT_EXPIRE_DAYS=7
+CORS_ORIGINS=*
 ```
 
-Depois rode:
+Inicie a API:
 
 ```bash
-npm run dev
+uvicorn app.main:app --host 0.0.0.0 --port 3333 --reload
 ```
 
-Teste no navegador:
+Teste:
 
 ```text
-http://localhost:3333/health
+http://127.0.0.1:3333/health
 ```
 
-Se estiver certo, deve aparecer `ok: true`.
+A documentação automática fica em:
 
-## 3. Conectar o app à API
+```text
+http://127.0.0.1:3333/docs
+```
 
-Na raiz do projeto, crie um arquivo `.env` usando `.env.example` como base.
+## 3. Configurar o aplicativo
 
-### Emulador/web no mesmo PC
+Na raiz do projeto:
+
+```bash
+npm install
+```
+
+Crie um `.env` baseado em `.env.example`.
+
+### Web/emulador no mesmo PC
 
 ```env
-EXPO_PUBLIC_API_URL=http://localhost:3333
+EXPO_PUBLIC_API_URL=http://127.0.0.1:3333
 ```
 
 ### Celular físico com Expo Go
 
-No celular, `localhost` aponta para o próprio celular. Use o **IPv4 do computador** que está rodando o backend.
-
-No Windows:
+No celular, `localhost` aponta para o próprio celular. Descubra o IPv4 do PC:
 
 ```bash
 ipconfig
 ```
 
-Exemplo, se o IPv4 do PC for `192.168.0.15`:
+Exemplo:
 
 ```env
 EXPO_PUBLIC_API_URL=http://192.168.0.15:3333
 ```
 
-O PC e o celular precisam estar na mesma rede Wi-Fi.
+PC e celular precisam estar na mesma rede Wi-Fi e o firewall precisa permitir a porta `3333`.
 
 ## 4. Rodar o aplicativo
 
-Em outro terminal, na raiz:
-
 ```bash
-npm install
 npx expo start
 ```
 
-Abra pelo Expo Go ou emulador.
+Abra pelo Expo Go, Android/iOS ou web.
+
+## Fluxos integrados
+
+- Cadastro de usuário
+- Login com senha criptografada e JWT
+- Sessão persistida no aparelho
+- Perfil e edição de perfil
+- Catálogo de livros, filmes e séries
+- Detalhes das obras
+- Cadastro de novas obras
+- Avaliação rápida
+- Avaliação detalhada em etapas
+- Listagem das avaliações do usuário
+- Estantes personalizadas
+- Criação de nova estante
+- Adição/remoção de itens pelas rotas da API
+- Média e quantidade de avaliações por obra
 
 ## Principais rotas da API
 
 ```text
+GET    /health
 POST   /auth/register
 POST   /auth/login
 GET    /auth/me
 PUT    /users/me
 GET    /works
-GET    /works/:id
+GET    /works/{id}
 POST   /works
-POST   /works/:id/reviews
+POST   /works/{id}/reviews
 GET    /reviews/me
 GET    /shelves
 POST   /shelves
-POST   /shelves/:id/items
-DELETE /shelves/:id/items/:workId
+POST   /shelves/{id}/items
+DELETE /shelves/{id}/items/{workId}
 ```
 
-As rotas de cadastro de obra, avaliação e estantes exigem o token JWT recebido no login/cadastro.
+Rotas de perfil, cadastro de obra, avaliações e estantes protegidas usam `Authorization: Bearer <token>`.
 
-## Observações
+## Figma e assets
 
-O login, cadastro, cadastro de obra e avaliações do aplicativo já estão preparados para conversar com a API. O catálogo visual ainda mantém parte dos dados mockados do Figma para preservar o layout enquanto a integração completa com todas as telas é finalizada.
+As telas foram reconstruídas tomando o Figma como referência, incluindo as cores principais `#343399`, `#009172` e `#EBBC00`, tipografia e estrutura responsiva.
 
-Os assets vindos diretamente do Figma usam URLs temporárias e futuramente devem ser salvos localmente ou hospedados de forma permanente.
+Algumas imagens ainda são carregadas pelas URLs de assets exportadas pelo próprio Figma. Essas URLs são temporárias; para produção, os PNG/SVG precisam ser copiados para `assets/` ou hospedados de forma permanente.
+
+## Google Login
+
+O botão visual do Google está presente conforme o Figma, mas o OAuth real exige credenciais de um projeto Google (Client IDs para as plataformas usadas). Sem essas credenciais, o login funcional disponível é e-mail + senha.
