@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { Cinzel_700Bold, useFonts as useCinzelFonts } from '@expo-google-fonts/cinzel';
 import { Poppins_400Regular, Poppins_600SemiBold, useFonts as usePoppinsFonts } from '@expo-google-fonts/poppins';
+import { Roboto_300Light, Roboto_400Regular, Roboto_600SemiBold, useFonts as useRobotoFonts } from '@expo-google-fonts/roboto';
 import { View } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
@@ -22,15 +23,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   const [cinzelLoaded] = useCinzelFonts({ Cinzel_700Bold });
   const [poppinsLoaded] = usePoppinsFonts({ Poppins_400Regular, Poppins_600SemiBold });
+  const [robotoLoaded] = useRobotoFonts({ Roboto_300Light, Roboto_400Regular, Roboto_600SemiBold });
 
-  if (!cinzelLoaded || !poppinsLoaded) {
+  if (!cinzelLoaded || !poppinsLoaded || !robotoLoaded) {
     return <View style={{ flex: 1, backgroundColor: colors.navy }} />;
   }
 
   return (
     <NavigationContainer theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, background: colors.navy } }}>
-      <StatusBar style="light" />
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: colors.navy } }}>
+      <StatusBar style="dark" />
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#FFFFFF' } }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
