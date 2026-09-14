@@ -1,49 +1,40 @@
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList, MediaKind } from '../navigation/types';
 import { colors } from '../theme/colors';
+import { AppHeader } from '../components/AppHeader';
+import { AppFooter } from '../components/AppFooter';
+
+const heroArt = 'https://www.figma.com/api/mcp/asset/cd25fb7b-b41a-473f-bd4f-3fcfbfef8ca1.png';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Explore'>;
 
-const categories: { label: string; kind: MediaKind; copy: string; emoji: string }[] = [
-  { label: 'Filme', kind: 'filme', copy: 'Avalie os filmes que marcaram você!', emoji: '✨' },
-  { label: 'Série', kind: 'serie', copy: 'Compartilhe o que achou de uma série', emoji: '✨' },
-  { label: 'Livro', kind: 'livro', copy: 'Dê sua opinião sobre grandes histórias!', emoji: '✨' },
+const categories: { label: string; kind: MediaKind; copy: string }[] = [
+  { label: 'Filme', kind: 'filme', copy: 'Avalie os filmes que marcaram você!' },
+  { label: 'Série', kind: 'serie', copy: 'Compartilhe o que achou de uma série' },
+  { label: 'Livro', kind: 'livro', copy: 'Dê sua opinião sobre grandes histórias!' },
 ];
 
-const reviews = [
-  { id: '1', top: false },
-  { id: '2', top: true },
-  { id: '3', top: false },
-];
+const reviews = ['1', '2', '3'];
 
 export function ExploreScreen({ navigation }: Props) {
   const { width } = useWindowDimensions();
-  const narrow = width < 390;
+  const wide = width >= 760;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.brand}>MONTENEGRO</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
-            <Pressable onPress={() => navigation.navigate('Catalog', { kind: 'livro' })}><Text style={styles.navText}>Obras</Text></Pressable>
-            <Pressable onPress={() => navigation.navigate('Shelves')}><Text style={styles.navText}>Estantes</Text></Pressable>
-            <Pressable onPress={() => navigation.navigate('QuickReview', { id: '1' })}><Text style={styles.navText}>Avaliações</Text></Pressable>
-            <Pressable onPress={() => navigation.navigate('AddWork')}><Text style={styles.navText}>Cadastrar obras</Text></Pressable>
-            <Pressable onPress={() => navigation.navigate('Profile')}><Text style={styles.navText}>Perfil</Text></Pressable>
-          </ScrollView>
+        <AppHeader navigation={navigation} />
+
+        <View style={[styles.hero, wide && styles.heroWide]}>
+          <Text style={[styles.heroTitle, wide && styles.heroTitleWide]}>Descubra, avalie e{`\n`}compartilhe suas{`\n`}paixões <Text style={styles.yellow}>brasileiras!</Text></Text>
+          <Image source={{ uri: heroArt }} style={[styles.heroArt, wide && styles.heroArtWide]} resizeMode="contain" />
         </View>
 
-        <View style={styles.hero}>
-          <Text style={[styles.heroTitle, narrow && { fontSize: 27 }]}>Descubra, avalie e{`\n`}compartilhe suas{`\n`}paixões <Text style={styles.yellow}>brasileiras!</Text></Text>
-          <Text style={styles.heroArt}>🎬 🍿 🎟️</Text>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reviewsRow} snapToInterval={270} decelerationRate="fast">
-          {reviews.map((item) => (
-            <View key={item.id} style={[styles.reviewCard, item.top && styles.reviewCardFeatured]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.reviewsRow, wide && styles.reviewsRowWide]} decelerationRate="fast">
+          {reviews.map((id, index) => (
+            <View key={id} style={[styles.reviewCard, wide && styles.reviewCardWide, index === 1 && styles.reviewCardFeatured]}>
               <View style={styles.reviewUserRow}>
                 <View style={styles.avatar} />
                 <View>
@@ -52,20 +43,17 @@ export function ExploreScreen({ navigation }: Props) {
                 </View>
               </View>
               <Text style={styles.reviewStars}>★★★★★</Text>
-              <Text style={styles.reviewText}>É uma obra simples e encantadora, mas cheia de significados profundos. A narrativa é leve, porém convida o leitor a refletir.</Text>
+              <Text style={styles.reviewText}>É uma obra simples e encantadora, mas cheia de significados profundos. A narrativa é leve, porém convida o leitor a refletir sobre temas como amizade, amor e a essência das pessoas.</Text>
             </View>
           ))}
         </ScrollView>
 
-        <Text style={styles.sectionTitle}>O que vai avaliar hoje?</Text>
+        <Text style={[styles.sectionTitle, wide && styles.sectionTitleWide]}>O que vai avaliar hoje?</Text>
 
-        <View style={styles.categoryPanel}>
+        <View style={[styles.categoryPanel, wide && styles.categoryPanelWide]}>
           {categories.map((item) => (
-            <View key={item.kind} style={styles.categoryCard}>
-              <View style={styles.categoryHeadingRow}>
-                <Text style={styles.categoryTitle}>{item.label}</Text>
-                <Text style={styles.sparkle}>{item.emoji}</Text>
-              </View>
+            <View key={item.kind} style={[styles.categoryCard, wide && styles.categoryCardWide]}>
+              <Text style={styles.categoryTitle}>{item.label} <Text style={styles.sparkle}>✦</Text></Text>
               <Text style={styles.categoryCopy}>{item.copy}</Text>
               <Pressable onPress={() => navigation.navigate('Catalog', { kind: item.kind })} style={({ pressed }) => [styles.evaluateButton, pressed && styles.pressed]}>
                 <Text style={styles.evaluateText}>Avaliar</Text>
@@ -74,29 +62,26 @@ export function ExploreScreen({ navigation }: Props) {
           ))}
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Desenvolvedores:{`\n`}Ana Clara Rivas{`\n`}Beatriz Krisan{`\n`}Byanca Lourenço{`\n`}Gabriely Santos</Text>
-          <Text style={styles.footerText}>Filme{`\n`}Série{`\n`}Livro{`\n`}Destaques{`\n`}Cadastrar obras</Text>
-          <Text style={styles.footerBrand}>🎬🎟️🇧🇷{`\n`}MONTENEGRO</Text>
-        </View>
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
-  page: { paddingBottom: 0 },
-  header: { marginHorizontal: 18, marginTop: 8, backgroundColor: '#3A36A6', borderRadius: 999, paddingHorizontal: 18, paddingVertical: 11 },
-  brand: { color: '#fff', fontFamily: 'Cinzel_700Bold', fontSize: 20, textAlign: 'center' },
-  navRow: { gap: 22, alignItems: 'center', paddingTop: 9, paddingHorizontal: 2 },
-  navText: { color: '#fff', fontFamily: 'Poppins_400Regular', fontSize: 12 },
-  hero: { paddingHorizontal: 26, paddingTop: 52, alignItems: 'center' },
-  heroTitle: { alignSelf: 'flex-start', color: colors.purple, fontFamily: 'Poppins_600SemiBold', fontSize: 31, lineHeight: 39 },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  page: { paddingBottom: 0, backgroundColor: '#FFFFFF' },
+  hero: { paddingHorizontal: 28, paddingTop: 48, alignItems: 'center' },
+  heroWide: { width: '76%', maxWidth: 1090, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between', paddingTop: 70 },
+  heroTitle: { alignSelf: 'flex-start', color: colors.purple, fontFamily: 'Poppins_600SemiBold', fontSize: 29, lineHeight: 38 },
+  heroTitleWide: { fontSize: 43, lineHeight: 54, width: '52%' },
   yellow: { color: '#EBBC00' },
-  heroArt: { fontSize: 46, marginTop: 26 },
-  reviewsRow: { paddingHorizontal: 18, gap: 12, paddingTop: 44, paddingBottom: 12 },
-  reviewCard: { width: 252, minHeight: 170, borderWidth: 1, borderColor: colors.purple, borderRadius: 14, padding: 14, backgroundColor: '#fff' },
+  heroArt: { width: 220, height: 190, marginTop: 24 },
+  heroArtWide: { width: 410, height: 360, marginTop: 0 },
+  reviewsRow: { paddingHorizontal: 18, gap: 12, paddingTop: 44, paddingBottom: 18 },
+  reviewsRowWide: { width: '100%', justifyContent: 'center', gap: 22, paddingTop: 28, overflow: 'visible' },
+  reviewCard: { width: 252, minHeight: 170, borderWidth: 1, borderColor: colors.purple, borderRadius: 14, padding: 14, backgroundColor: '#FFFFFF' },
+  reviewCardWide: { width: 384, minHeight: 233, padding: 26, justifyContent: 'center' },
   reviewCardFeatured: { transform: [{ translateY: -18 }] },
   reviewUserRow: { flexDirection: 'row', gap: 9, alignItems: 'center' },
   avatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.purple },
@@ -105,16 +90,15 @@ const styles = StyleSheet.create({
   reviewStars: { color: '#FFD62A', fontSize: 15, letterSpacing: 1.5, marginTop: 9 },
   reviewText: { color: '#001A38', fontFamily: 'Poppins_400Regular', fontSize: 9.5, lineHeight: 14, marginTop: 5 },
   sectionTitle: { color: colors.green, fontFamily: 'Poppins_600SemiBold', fontSize: 24, textAlign: 'center', marginTop: 42, marginBottom: 24 },
+  sectionTitleWide: { fontSize: 34, marginTop: 70, marginBottom: 44 },
   categoryPanel: { marginHorizontal: 18, backgroundColor: '#EFEFEF', borderRadius: 24, padding: 18, gap: 14 },
+  categoryPanelWide: { width: '84%', maxWidth: 1216, alignSelf: 'center', borderRadius: 40, paddingHorizontal: 126, paddingVertical: 62, flexDirection: 'row', justifyContent: 'space-between', gap: 78 },
   categoryCard: { backgroundColor: '#D9D9D9', borderRadius: 18, padding: 18 },
-  categoryHeadingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  categoryCardWide: { flex: 1, minHeight: 261, borderRadius: 30, padding: 28, justifyContent: 'center' },
   categoryTitle: { color: colors.purple, fontFamily: 'Poppins_600SemiBold', fontSize: 27 },
-  sparkle: { fontSize: 25 },
-  categoryCopy: { color: '#111', fontFamily: 'Poppins_400Regular', fontSize: 13, lineHeight: 19, marginTop: 8 },
-  evaluateButton: { alignSelf: 'flex-start', backgroundColor: colors.purple, paddingHorizontal: 24, paddingVertical: 8, borderRadius: 999, marginTop: 14 },
-  evaluateText: { color: '#fff', fontFamily: 'Poppins_400Regular', fontSize: 12 },
-  pressed: { opacity: .72 },
-  footer: { marginTop: 64, backgroundColor: colors.purple, paddingHorizontal: 22, paddingTop: 30, paddingBottom: 38, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 18 },
-  footerText: { color: '#fff', fontFamily: 'Poppins_400Regular', fontSize: 11, lineHeight: 17 },
-  footerBrand: { width: '100%', color: '#FFDD56', fontFamily: 'Cinzel_700Bold', fontSize: 22, textAlign: 'center', marginTop: 10 },
+  sparkle: { color: colors.green },
+  categoryCopy: { color: '#111111', fontFamily: 'Poppins_400Regular', fontSize: 13, lineHeight: 19, marginTop: 8 },
+  evaluateButton: { alignSelf: 'flex-start', backgroundColor: colors.purple, minWidth: 110, paddingHorizontal: 24, paddingVertical: 8, borderRadius: 999, marginTop: 18, alignItems: 'center' },
+  evaluateText: { color: '#FFFFFF', fontFamily: 'Poppins_400Regular', fontSize: 12 },
+  pressed: { opacity: 0.72 },
 });
