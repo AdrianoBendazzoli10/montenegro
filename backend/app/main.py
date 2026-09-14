@@ -326,6 +326,26 @@ def create_shelf(
     return {"shelf": {"id": shelf.id, "name": shelf.name, "user_id": shelf.user_id, "items": []}}
 
 
+@app.put("/shelves/{shelf_id}")
+def rename_shelf(
+    shelf_id: int,
+    payload: ShelfCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    shelf = db.scalar(select(Shelf).where(Shelf.id == shelf_id, Shelf.user_id == current_user.id))
+    if shelf is None:
+        raise HTTPException(status_code=404, detail="Estante não encontrada.")
+    shelf.name = payload.name.strip()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Você já possui uma estante com esse nome.")
+    db.refresh(shelf)
+    return {"shelf": {"id": shelf.id, "name": shelf.name, "user_id": shelf.user_id}}
+
+
 @app.post("/shelves/{shelf_id}/items", status_code=status.HTTP_201_CREATED)
 def add_shelf_item(
     shelf_id: int,
