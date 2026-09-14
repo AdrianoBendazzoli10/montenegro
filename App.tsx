@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +18,7 @@ import { ProfileScreen, EditProfileScreen } from './src/screens/ProfileScreens';
 import { AddWorkScreen } from './src/screens/AddWorkScreen';
 import type { RootStackParamList } from './src/navigation/types';
 import { colors } from './src/theme/colors';
+import { restoreAuthToken } from './src/services/api';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,15 +26,23 @@ export default function App() {
   const [cinzelLoaded] = useCinzelFonts({ Cinzel_700Bold });
   const [poppinsLoaded] = usePoppinsFonts({ Poppins_400Regular, Poppins_600SemiBold });
   const [robotoLoaded] = useRobotoFonts({ Roboto_300Light, Roboto_400Regular, Roboto_500Medium });
+  const [sessionReady, setSessionReady] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
-  if (!cinzelLoaded || !poppinsLoaded || !robotoLoaded) {
+  useEffect(() => {
+    restoreAuthToken()
+      .then((token) => setHasSession(Boolean(token)))
+      .finally(() => setSessionReady(true));
+  }, []);
+
+  if (!cinzelLoaded || !poppinsLoaded || !robotoLoaded || !sessionReady) {
     return <View style={{ flex: 1, backgroundColor: colors.navy }} />;
   }
 
   return (
     <NavigationContainer theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, background: colors.navy } }}>
       <StatusBar style="dark" />
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#FFFFFF' } }}>
+      <Stack.Navigator initialRouteName={hasSession ? 'Explore' : 'Home'} screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#FFFFFF' } }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
