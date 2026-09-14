@@ -75,6 +75,14 @@ export function ShelvesScreen({ navigation }: Props) {
     ? shelves.map((shelf) => ({ id: shelf.id, title: shelf.name, images: shelf.items.map((item) => item.image_url || '').filter(Boolean) }))
     : demoShelves.map((shelf, index) => ({ id: -(index + 1), ...shelf }));
 
+  function editShelf(id: number) {
+    if (id < 0) {
+      setStatus('As estantes de demonstração são apenas visuais. Crie uma estante para poder editá-la.');
+      return;
+    }
+    navigation.navigate('EditShelf', { shelfId: id });
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
@@ -91,7 +99,7 @@ export function ShelvesScreen({ navigation }: Props) {
             </View>
             <View style={[styles.yellowStrip, wide && styles.yellowStripWide]}>
               <Text style={[styles.shelfTitle, wide && styles.shelfTitleWide]}>{shelf.title}</Text>
-              <Pressable style={styles.editButton}><Text style={styles.editText}>EDITAR ESTANTE</Text></Pressable>
+              <Pressable onPress={() => editShelf(shelf.id)} style={styles.editButton}><Text style={styles.editText}>EDITAR ESTANTE</Text></Pressable>
             </View>
           </View>
         ))}
