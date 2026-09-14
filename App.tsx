@@ -14,6 +14,7 @@ import { CatalogScreen } from './src/screens/CatalogScreen';
 import { DetailsScreen } from './src/screens/DetailsScreen';
 import { QuickReviewScreen, DetailedReviewScreen } from './src/screens/ReviewScreens';
 import { ShelvesScreen } from './src/screens/ShelvesScreen';
+import { EditShelfScreen } from './src/screens/EditShelfScreen';
 import { ProfileScreen, EditProfileScreen } from './src/screens/ProfileScreens';
 import { AddWorkScreen } from './src/screens/AddWorkScreen';
 import type { RootStackParamList } from './src/navigation/types';
@@ -52,6 +53,7 @@ export default function App() {
         <Stack.Screen name="QuickReview" component={QuickReviewScreen} />
         <Stack.Screen name="DetailedReview" component={DetailedReviewScreen} />
         <Stack.Screen name="Shelves" component={ShelvesScreen} />
+        <Stack.Screen name="EditShelf" component={EditShelfScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="AddWork" component={AddWorkScreen} />
